@@ -1,4 +1,4 @@
-# Notion CLI
+# Notion CLI (Rust)
 
 A command-line interface for managing tasks in Notion, written in Rust.
 
@@ -16,8 +16,8 @@ A command-line interface for managing tasks in Notion, written in Rust.
 
 1. Clone the repository:
 ```bash
-git clone [your-repo-url]
-cd notion-cli
+git clone https://github.com/CharlonTank/notion-cli-rs.git
+cd notion-cli-rs
 ```
 
 2. Build the project:
@@ -97,7 +97,7 @@ cargo test
 cargo build --release
 ```
 
-The binary will be available at `target/release/notion-cli`
+The binary will be available at `target/release/notion-cli-rs`
 
 ## License
 
