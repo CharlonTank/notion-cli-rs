@@ -3,7 +3,6 @@ use anyhow::Result;
 use reqwest::Client;
 use serde_json;
 use std::fmt;
-use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Task {
@@ -111,12 +110,14 @@ impl std::str::FromStr for TaskPriority {
     }
 }
 
+#[allow(dead_code)]
 pub struct NotionClient {
     client: Client,
     config: Config,
     api_url: String,
 }
 
+#[allow(dead_code)]
 impl NotionClient {
     pub fn new(config: Config) -> Result<Self> {
         Ok(Self {

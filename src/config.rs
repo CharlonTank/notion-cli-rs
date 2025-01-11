@@ -1,12 +1,14 @@
 use anyhow::{anyhow, Result};
 use std::env;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Config {
     pub notion_token: String,
     pub database_id: String,
 }
 
+#[allow(dead_code)]
 impl Config {
     pub fn new() -> Result<Self> {
         let notion_token = env::var("NOTION_TOKEN")
