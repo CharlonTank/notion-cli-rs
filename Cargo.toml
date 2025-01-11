@@ -1,6 +1,6 @@
 [package]
 name = "notion-cli-rs"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Charlon Franck <charlondev@gmail.com>"]
 description = "A powerful command-line interface for managing Notion tasks"
