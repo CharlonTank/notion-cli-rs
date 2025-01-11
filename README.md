@@ -1,34 +1,97 @@
-# Notion CLI (Rust)
+# 📋 Notion CLI (Rust)
 
-A powerful command-line interface for managing tasks in Notion, written in Rust. This CLI tool allows you to manage your Notion tasks directly from your terminal with rich features and intuitive commands.
+<div align="center">
 
-## Features
+[![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Notion](https://img.shields.io/badge/Notion-%23000000.svg?style=for-the-badge&logo=notion&logoColor=white)](https://www.notion.so/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
 
-- Add new tasks with rich metadata:
-  - Priority levels (High, Medium, Low) 🔴 🟡 🟢
-  - Due dates 📅
-  - Tags 🏷️
-  - Descriptions 📝
-- List tasks with advanced filtering and sorting:
-  - Filter by status (Not started ⭕, In progress 🔄, Done ✅)
-  - Filter by priority
-  - Filter by tags
-  - Sort by due date
-  - Colored output in terminal
-- Update task properties:
-  - Change task status
-  - Set/update priority levels
-  - Set/update due dates
-  - Add/update tags
-  - Set/update descriptions
+A powerful command-line interface for managing Notion tasks, written in Rust. 
+Streamline your task management workflow directly from your terminal.
+
+[Installation](#installation) •
+[Features](#features) •
+[Setup Guide](#notion-setup-detailed-guide) •
+[Usage](#usage-guide) •
+[Contributing](#contributing)
+
+---
+
+</div>
+
+## ✨ Features
+
+<div align="center">
+<table>
+<tr>
+<td>
+
+### 📝 Task Creation
+- Create tasks with rich metadata
+- Set priority levels 🔴 🟡 🟢
+- Add due dates 📅
+- Assign tags 🏷️
+- Include descriptions 📝
+
+</td>
+<td>
+
+### 📊 Task Management
+- Update task status ⭕ 🔄 ✅
+- Modify priorities
+- Change due dates
+- Edit descriptions
+- Manage tags
+
+</td>
+</tr>
+<tr>
+<td>
+
+### 🔍 Advanced Filtering
+- Filter by status
+- Filter by priority
+- Filter by tags
+- Sort by due date
+- Colored terminal output
+
+</td>
+<td>
+
+### ⚡ Quick Actions
+- Mark tasks complete
+- Set task priorities
+- Update task status
 - Delete tasks
+- Bulk operations
 
-## Prerequisites
+</td>
+</tr>
+</table>
+</div>
 
-- Rust and Cargo installed on your system ([Install Rust](https://www.rust-lang.org/tools/install))
+## 🚀 Quick Start
+
+### Prerequisites
+
+<details>
+<summary>Click to expand</summary>
+
+- [Rust and Cargo](https://www.rust-lang.org/tools/install)
 - A Notion account
-- A Notion integration token
-- A properly configured Notion database
+- Notion integration token
+- Configured Notion database
+
+</details>
+
+### One-Line Installation (Unix-like Systems)
+```bash
+curl -sSL https://raw.githubusercontent.com/CharlonTank/notion-cli-rs/master/install.sh | bash
+```
+
+<details>
+<summary>Manual Installation Steps</summary>
 
 ## Installation
 
@@ -128,59 +191,75 @@ notion-cli-rs --help
 cargo run -- --help
 ```
 
-## Notion Setup (Detailed Guide)
+</details>
 
-1. Create a Notion Integration:
-   - Visit [Notion Integrations](https://www.notion.so/my-integrations)
-   - Click "New integration"
-   - Name: Enter a name (e.g., "Task Manager CLI")
-   - Capabilities needed:
-     - ✅ Read content
-     - ✅ Update content
-     - ✅ Insert content
-     - ✅ Delete content
-   - Click "Submit"
-   - Copy the "Internal Integration Token" (starts with `secret_`)
+## 🔧 Configuration
 
-2. Create a Notion Database:
-   - Open Notion
-   - Click "+ New page" in the sidebar
-   - Click "Table" at the top
-   - Add the following properties (exact names are important):
-     - "Name" (already exists, title type)
-     - Click "+ Add a property" for each:
-       - "Status" (Select type)
-         - Options: "Not started", "In progress", "Done"
-         - Colors: Gray, Blue, Green (recommended)
-       - "Priority" (Select type)
-         - Options: "High", "Medium", "Low"
-         - Colors: Red, Yellow, Green (recommended)
-       - "Due Date" (Date type)
-       - "Tags" (Multi-select type)
-         - Add some initial tags (e.g., "work", "personal", "urgent")
-       - "Description" (Text type)
+<details>
+<summary>1. Create Notion Integration</summary>
 
-3. Share Database with Integration:
-   - In your database view, click "•••" (three dots) in the top-right corner
-   - Click "Add connections"
-   - Find and select your integration name
-   - Click "Confirm"
+1. Visit [Notion Integrations](https://www.notion.so/my-integrations)
+2. Click "New integration"
+3. Configure capabilities:
+   - ✅ Read content
+   - ✅ Update content
+   - ✅ Insert content
+   - ✅ Delete content
+4. Copy the Integration Token
 
-4. Get Database ID:
-   - Open your database in Notion
-   - Look at the URL: `https://www.notion.so/workspace/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX?v=...`
-   - Copy the 32-character ID (marked as X's above)
+</details>
 
-5. Configure Environment:
+<details>
+<summary>2. Setup Notion Database</summary>
+
+Create a database with these properties:
+| Property | Type | Options |
+|----------|------|---------|
+| Name | Title | - |
+| Status | Select | Not started, In progress, Done |
+| Priority | Select | High, Medium, Low |
+| Due Date | Date | - |
+| Tags | Multi-select | Custom tags |
+| Description | Text | - |
+
+</details>
+
+<details>
+<summary>3. Configure Environment</summary>
+
 ```bash
-# Copy the example environment file
 cp .env.example .env
+```
 
-# Edit the .env file with your details
+```env
 NOTION_TOKEN=secret_your_integration_token_here
 NOTION_DATABASE_ID=your_database_id_here
-LOCAL_TIMEZONE=America/New_York  # Use your timezone from the TZ database
+LOCAL_TIMEZONE=America/New_York
 ```
+
+</details>
+
+## 📖 Usage Examples
+
+### Basic Operations
+
+```bash
+# Create a task
+notion-cli-rs add "Deploy new feature" \
+  --priority high \
+  --due "2024-01-20" \
+  --tags "dev,feature" \
+  --description "Deploy the new authentication system"
+
+# List tasks
+notion-cli-rs list
+
+# Update status
+notion-cli-rs status <task-id> "in progress"
+```
+
+<details>
+<summary>View More Examples</summary>
 
 ## Usage Guide
 
@@ -243,19 +322,24 @@ cargo run -- list --tag work
 cargo run -- list --sort-by-due
 ```
 
-## Task Properties
+</details>
 
-- **Status Options:**
-  - "Not started" (⭕)
-  - "In progress" (🔄)
-  - "Done" (✅)
+## 🎯 Task Properties
 
-- **Priority Levels:**
-  - "High" (🔴)
-  - "Medium" (🟡)
-  - "Low" (🟢)
+<div align="center">
 
-## Troubleshooting
+| Status | Symbol | | Priority | Symbol |
+|--------|--------||-|----------|--------|
+| Not Started | ⭕ | | High | 🔴 |
+| In Progress | 🔄 | | Medium | 🟡 |
+| Done | ✅ | | Low | 🟢 |
+
+</div>
+
+## 🔍 Troubleshooting
+
+<details>
+<summary>Common Issues and Solutions</summary>
 
 ### Common Issues:
 
@@ -290,30 +374,39 @@ cargo run -- list --help
 # etc.
 ```
 
-## Development
+</details>
+
+## 🛠️ Development
+
+<details>
+<summary>Development Guidelines</summary>
 
 ### Running Tests
-
 ```bash
-# Run all tests
-cargo test
-
-# Run tests with output
-cargo test -- --nocapture
-
-# Run specific test
-cargo test test_name -- --nocapture
+cargo test         # Run all tests
+cargo test -- --nocapture  # With output
 ```
 
-### Building for Release
-
+### Building
 ```bash
 cargo build --release
 ```
 
-The binary will be available at `target/release/notion-cli-rs`
+</details>
 
-## License
+## 🤝 Contributing
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+Made with ❤️ by [CharlonTank](https://github.com/CharlonTank)
+
+</div>
 
