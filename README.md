@@ -43,12 +43,86 @@ cd notion-cli-rs
 cargo build --release
 ```
 
-3. (Optional) Add the binary to your PATH:
+3. Install the binary:
+
+### Unix-like Systems (Linux/macOS)
+
+#### Option A: Local User Installation
 ```bash
-# On Unix-like systems (Linux/macOS)
+# Create local bin directory if it doesn't exist
+mkdir -p ~/.local/bin
+
+# Copy the binary
 cp target/release/notion-cli-rs ~/.local/bin/
-# Or
+
+# Add to PATH in your shell's configuration file:
+
+# For Bash (add to ~/.bashrc or ~/.bash_profile)
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+# For Zsh (add to ~/.zshrc)
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# For Fish (add to ~/.config/fish/config.fish)
+echo 'set -x PATH $HOME/.local/bin $PATH' >> ~/.config/fish/config.fish
+source ~/.config/fish/config.fish
+```
+
+#### Option B: System-wide Installation
+```bash
+# Requires sudo privileges
 sudo cp target/release/notion-cli-rs /usr/local/bin/
+```
+
+### Windows
+
+#### Option A: Manual Installation
+```powershell
+# Create a directory for the binary
+mkdir -p "$env:USERPROFILE\bin"
+
+# Copy the binary
+copy "target\release\notion-cli-rs.exe" "$env:USERPROFILE\bin"
+
+# Add to PATH in PowerShell (current session)
+$env:PATH += ";$env:USERPROFILE\bin"
+
+# Add to PATH permanently (run in PowerShell as Administrator)
+[Environment]::SetEnvironmentVariable(
+    "Path",
+    [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:USERPROFILE\bin",
+    "User"
+)
+```
+
+#### Option B: Using Scoop
+```powershell
+# Install Scoop if not already installed
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+irm get.scoop.sh | iex
+
+# Create and switch to a new directory for the package
+mkdir ~/.scoop/apps/notion-cli-rs
+cd ~/.scoop/apps/notion-cli-rs
+
+# Copy the binary
+copy "target\release\notion-cli-rs.exe" "notion-cli-rs.exe"
+
+# Add to Scoop's shims
+scoop shim add notion-cli-rs
+```
+
+### Verify Installation
+
+After installation, verify the CLI is properly installed:
+```bash
+# If added to PATH
+notion-cli-rs --help
+
+# Or using cargo
+cargo run -- --help
 ```
 
 ## Notion Setup (Detailed Guide)
