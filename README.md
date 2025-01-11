@@ -12,8 +12,6 @@
 A powerful command-line interface for managing Notion tasks, written in Rust. 
 Streamline your task management workflow directly from your terminal.
 
-> **Note**: This package is currently only available through GitHub installation. Crates.io publication is coming soon!
-
 [Installation](#installation) •
 [Features](#features) •
 [Setup Guide](#notion-setup-detailed-guide) •
@@ -131,26 +129,11 @@ curl -sSL https://raw.githubusercontent.com/CharlonTank/notion-cli-rs/master/ins
 ```
 
 <details>
-<summary>Manual Installation Steps</summary>
-
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/CharlonTank/notion-cli-rs.git
-cd notion-cli-rs
-```
-
-2. Build the project:
-```bash
-cargo build --release
-```
-
-3. Install the binary:
+<summary>Additional Installation Options</summary>
 
 ### Unix-like Systems (Linux/macOS)
 
-#### Option A: Local User Installation
+#### Local User Installation
 ```bash
 # Create local bin directory if it doesn't exist
 mkdir -p ~/.local/bin
@@ -170,21 +153,17 @@ source ~/.zshrc
 
 # For Fish (recommended way)
 fish_add_path ~/.local/bin
-
-# Alternative for older Fish versions (< 3.2.0)
-# echo 'set -x PATH $HOME/.local/bin $PATH' >> ~/.config/fish/config.fish
-# source ~/.config/fish/config.fish
 ```
 
-#### Option B: System-wide Installation
+#### System-wide Installation
 ```bash
 # Requires sudo privileges
 sudo cp target/release/notion-cli-rs /usr/local/bin/
 ```
 
-### Windows
+### Windows Installation
 
-#### Option A: Manual Installation
+#### Manual Installation
 ```powershell
 # Create a directory for the binary
 mkdir -p "$env:USERPROFILE\bin"
@@ -203,7 +182,7 @@ $env:PATH += ";$env:USERPROFILE\bin"
 )
 ```
 
-#### Option B: Using Scoop
+#### Using Scoop
 ```powershell
 # Install Scoop if not already installed
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -220,18 +199,14 @@ copy "target\release\notion-cli-rs.exe" "notion-cli-rs.exe"
 scoop shim add notion-cli-rs
 ```
 
+</details>
+
 ### Verify Installation
 
 After installation, verify the CLI is properly installed:
 ```bash
-# If added to PATH
 notion-cli-rs --help
-
-# Or using cargo
-cargo run -- --help
 ```
-
-</details>
 
 ## 🔧 Configuration
 
@@ -307,59 +282,71 @@ notion-cli-rs status <task-id> "in progress"
 
 ```bash
 # Add a simple task
-cargo run -- add "Buy groceries"
+notion-cli-rs add "Buy groceries"
 
 # Add a detailed task
-cargo run -- add "Quarterly report" \
+notion-cli-rs add "Quarterly report" \
   --priority high \
   --due "2024-01-20" \
   --tags "work,reports,q4" \
   --description "Prepare Q4 2023 financial report for stakeholders"
 
 # List all tasks
-cargo run -- list
+notion-cli-rs list
 
 # List tasks with filters
-cargo run -- list --status "in progress" --priority high
+notion-cli-rs list --status "in progress" --priority high
 
 # Update task status
-cargo run -- status <task-id> "in progress"
-cargo run -- status <task-id> "done"
+notion-cli-rs status <task-id> "in progress"
+notion-cli-rs status <task-id> "done"
 
 # Delete a task
-cargo run -- delete <task-id>
+notion-cli-rs delete <task-id>
 ```
 
 ### Advanced Task Management
 
 ```bash
 # Set/update task priority
-cargo run -- priority <task-id> high
+notion-cli-rs priority <task-id> high
 
 # Set/update due date
-cargo run -- due-date <task-id> "2024-01-20"
+notion-cli-rs due-date <task-id> "2024-01-20"
 
 # Add/update tags
-cargo run -- tags <task-id> "urgent,priority,q4"
+notion-cli-rs tags <task-id> "urgent,priority,q4"
 
 # Set/update description
-cargo run -- description <task-id> "Detailed task description here"
+notion-cli-rs description <task-id> "Detailed task description here"
 ```
 
 ### Filtering and Sorting
 
 ```bash
 # List high priority tasks
-cargo run -- list --priority high
+notion-cli-rs list --priority high
 
 # List in-progress tasks
-cargo run -- list --status "in progress"
+notion-cli-rs list --status "in progress"
 
 # List tasks with specific tag
-cargo run -- list --tag work
+notion-cli-rs list --tag work
 
 # List tasks sorted by due date
-cargo run -- list --sort-by-due
+notion-cli-rs list --sort-by-due
+```
+
+### Getting Help
+
+```bash
+# Show general help
+notion-cli-rs --help
+
+# Show help for specific command
+notion-cli-rs add --help
+notion-cli-rs list --help
+# etc.
 ```
 
 </details>
@@ -406,11 +393,11 @@ cargo run -- list --sort-by-due
 
 ```bash
 # Show general help
-cargo run -- --help
+notion-cli-rs --help
 
 # Show help for specific command
-cargo run -- add --help
-cargo run -- list --help
+notion-cli-rs add --help
+notion-cli-rs list --help
 # etc.
 ```
 
