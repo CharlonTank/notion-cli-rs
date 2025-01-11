@@ -1,8 +1,9 @@
 use crate::config::Config;
 use anyhow::Result;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde_json;
 use std::fmt;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Task {
@@ -16,6 +17,7 @@ pub struct Task {
     pub description: Option<String>,
 }
 
+#[allow(dead_code)]
 impl Task {
     pub fn status_symbol(&self) -> &str {
         self.status.symbol()
