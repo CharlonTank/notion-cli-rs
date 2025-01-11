@@ -6,6 +6,8 @@
 [![Notion](https://img.shields.io/badge/Notion-%23000000.svg?style=for-the-badge&logo=notion&logoColor=white)](https://www.notion.so/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
+[![Crates.io](https://img.shields.io/crates/v/notion-cli-rs?style=for-the-badge)](https://crates.io/crates/notion-cli-rs)
+[![Minimum Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg?style=for-the-badge)](https://www.rust-lang.org/)
 
 A powerful command-line interface for managing Notion tasks, written in Rust. 
 Streamline your task management workflow directly from your terminal.
@@ -19,6 +21,28 @@ Streamline your task management workflow directly from your terminal.
 ---
 
 </div>
+
+## 📦 Dependencies
+
+This project relies on the following major dependencies:
+
+- **reqwest** (0.11): HTTP client for making API requests
+- **tokio** (1.0): Async runtime for handling concurrent operations
+- **serde** (1.0): Serialization/deserialization of JSON data
+- **clap** (4.0): Command-line argument parsing
+- **anyhow** (1.0): Error handling
+- **dotenv** (0.15): Environment variable management
+
+For development:
+- **mockito** (1.2): HTTP mocking for tests
+- **env_logger** (0.10): Logging during development
+
+## 🔧 Requirements
+
+- Rust 1.70 or higher
+- Notion API Version: 2022-06-28
+- Unix-like OS (Linux/macOS) or Windows
+- Notion account with integration capabilities
 
 ## ✨ Features
 
@@ -409,4 +433,121 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Made with ❤️ by [CharlonTank](https://github.com/CharlonTank)
 
 </div>
+
+## 📐 Project Structure
+
+```
+notion-cli-rs/
+├── src/
+│   ├── main.rs      # CLI entry point and command handling
+│   ├── lib.rs       # Library interface
+│   ├── notion.rs    # Notion API client implementation
+│   └── config.rs    # Configuration management
+├── tests/
+│   └── integration_tests.rs  # Integration tests
+├── .env.example     # Environment variables template
+├── Cargo.toml       # Project dependencies
+└── install.sh       # Installation script
+```
+
+## 🔌 Notion API
+
+This CLI uses the Notion API v2022-06-28. For detailed API documentation, visit:
+- [Notion API Reference](https://developers.notion.com/reference)
+- [Notion API Guides](https://developers.notion.com/docs)
+
+Key API endpoints used:
+- `POST /v1/pages`: Create new tasks
+- `PATCH /v1/pages/{id}`: Update task properties
+- `POST /v1/databases/{id}/query`: List and filter tasks
+
+## 🛠️ Development Setup
+
+1. **Clone and Setup:**
+```bash
+git clone https://github.com/CharlonTank/notion-cli-rs.git
+cd notion-cli-rs
+cargo build
+```
+
+2. **Environment Setup:**
+```bash
+cp .env.example .env
+# Edit .env with your test credentials
+```
+
+3. **Running Tests:**
+```bash
+# Unit tests
+cargo test
+
+# Integration tests (requires .env setup)
+cargo test -- --test integration_tests
+
+# With logging
+RUST_LOG=debug cargo test -- --nocapture
+```
+
+4. **Code Style:**
+- Follow Rust standard naming conventions
+- Use `cargo fmt` before committing
+- Run `cargo clippy` for linting
+- Ensure all public items are documented
+
+## ⚠️ Error Handling
+
+### API Errors
+
+| Error Code | Description | Solution |
+|------------|-------------|----------|
+| 401 | Unauthorized | Check your NOTION_TOKEN |
+| 404 | Not Found | Verify database/page IDs |
+| 409 | Conflict | Check for duplicate operations |
+| 429 | Rate Limited | Implement backoff strategy |
+
+### Common Issues
+
+1. **Authentication Failures:**
+```
+Error: NOTION_TOKEN environment variable not set
+Solution: Ensure .env file exists and contains valid token
+```
+
+2. **Database Access:**
+```
+Error: Could not access database
+Solution: Check integration permissions and connection
+```
+
+3. **Invalid Properties:**
+```
+Error: Invalid task status
+Solution: Use exact status values: "Not started", "In progress", "Done"
+```
+
+## 🔍 Debugging
+
+Enable debug logging:
+```bash
+RUST_LOG=debug notion-cli-rs list
+```
+
+Common debug flags:
+- `RUST_LOG=debug`: Detailed logging
+- `RUST_BACKTRACE=1`: Full error backtraces
+- `NOTION_API_URL`: Override API endpoint (testing)
+
+## 📊 Performance
+
+- Concurrent API requests where possible
+- Connection pooling for multiple operations
+- Efficient JSON parsing
+- Minimal memory footprint
+
+## 🔒 Security
+
+- Tokens are never logged
+- Environment variables for sensitive data
+- HTTPS for all API communication
+- No data caching by default
 
