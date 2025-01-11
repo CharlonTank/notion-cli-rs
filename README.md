@@ -7,6 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
 [![Minimum Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg?style=for-the-badge)](https://www.rust-lang.org/)
+[![Crates.io](https://img.shields.io/crates/v/notion-cli-rs?style=for-the-badge)](https://crates.io/crates/notion-cli-rs)
 
 A powerful command-line interface for managing Notion tasks, written in Rust. 
 Streamline your task management workflow directly from your terminal.
@@ -110,7 +111,21 @@ For development:
 
 </details>
 
-### One-Line Installation (Unix-like Systems)
+### Installation
+
+#### Option 1: Install from crates.io (Recommended)
+```bash
+cargo install notion-cli-rs
+```
+
+#### Option 2: Install from source
+```bash
+git clone https://github.com/CharlonTank/notion-cli-rs.git
+cd notion-cli-rs
+cargo install --path .
+```
+
+#### Option 3: One-Line Installation Script (Unix-like Systems)
 ```bash
 curl -sSL https://raw.githubusercontent.com/CharlonTank/notion-cli-rs/master/install.sh | bash
 ```
