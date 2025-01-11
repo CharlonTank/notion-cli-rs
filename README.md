@@ -65,9 +65,12 @@ source ~/.bashrc
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 
-# For Fish (add to ~/.config/fish/config.fish)
-echo 'set -x PATH $HOME/.local/bin $PATH' >> ~/.config/fish/config.fish
-source ~/.config/fish/config.fish
+# For Fish (recommended way)
+fish_add_path ~/.local/bin
+
+# Alternative for older Fish versions (< 3.2.0)
+# echo 'set -x PATH $HOME/.local/bin $PATH' >> ~/.config/fish/config.fish
+# source ~/.config/fish/config.fish
 ```
 
 #### Option B: System-wide Installation
