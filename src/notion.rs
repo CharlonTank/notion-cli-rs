@@ -1,15 +1,35 @@
-use anyhow::{Result, Context};
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use crate::config::Config;
+use anyhow::Result;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use std::fmt;
 
-use crate::config::Config;
+#[derive(Debug, Clone, PartialEq)]
+pub struct Task {
+    pub id: String,
+    pub title: String,
+    pub status: TaskStatus,
+    pub url: Option<String>,
+    pub priority: Option<TaskPriority>,
+    pub due_date: Option<String>,
+    pub tags: Vec<String>,
+    pub description: Option<String>,
+}
 
-const NOTION_API_VERSION: &str = "2022-06-28";
-const NOTION_API_URL: &str = "https://api.notion.com/v1";
+impl Task {
+    pub fn status_symbol(&self) -> &str {
+        self.status.symbol()
+    }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+    pub fn priority_symbol(&self) -> &str {
+        match &self.priority {
+            Some(priority) => priority.symbol(),
+            None => " ",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum TaskStatus {
     NotStarted,
     InProgress,
@@ -26,65 +46,95 @@ impl fmt::Display for TaskStatus {
     }
 }
 
-impl From<&str> for TaskStatus {
-    fn from(status: &str) -> Self {
-        match status {
-            "In progress" => TaskStatus::InProgress,
-            "Done" => TaskStatus::Done,
-            _ => TaskStatus::NotStarted,
+impl TaskStatus {
+    pub fn symbol(&self) -> &str {
+        match self {
+            TaskStatus::NotStarted => "⭕",
+            TaskStatus::InProgress => "🔄",
+            TaskStatus::Done => "✅",
         }
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Task {
-    pub id: String,
-    pub title: String,
-    pub status: TaskStatus,
-    pub url: Option<String>,
-}
+impl std::str::FromStr for TaskStatus {
+    type Err = anyhow::Error;
 
-impl Task {
-    pub fn status_symbol(&self) -> &str {
-        match self.status {
-            TaskStatus::NotStarted => " ",
-            TaskStatus::InProgress => "⏳",
-            TaskStatus::Done => "✓",
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "not started" => Ok(TaskStatus::NotStarted),
+            "in progress" => Ok(TaskStatus::InProgress),
+            "done" => Ok(TaskStatus::Done),
+            _ => Err(anyhow::anyhow!("Invalid task status")),
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum TaskPriority {
+    High,
+    Medium,
+    Low,
+}
+
+impl fmt::Display for TaskPriority {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TaskPriority::High => write!(f, "High"),
+            TaskPriority::Medium => write!(f, "Medium"),
+            TaskPriority::Low => write!(f, "Low"),
+        }
+    }
+}
+
+impl TaskPriority {
+    pub fn symbol(&self) -> &str {
+        match self {
+            TaskPriority::High => "🔴",
+            TaskPriority::Medium => "🟡",
+            TaskPriority::Low => "🟢",
+        }
+    }
+}
+
+impl std::str::FromStr for TaskPriority {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "high" => Ok(TaskPriority::High),
+            "medium" => Ok(TaskPriority::Medium),
+            "low" => Ok(TaskPriority::Low),
+            _ => Err(anyhow::anyhow!("Invalid task priority")),
+        }
+    }
+}
+
 pub struct NotionClient {
-    client: reqwest::Client,
+    client: Client,
     config: Config,
+    api_url: String,
 }
 
 impl NotionClient {
     pub fn new(config: Config) -> Result<Self> {
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {}", config.notion_token))
-                .context("Failed to create authorization header")?,
-        );
-        headers.insert(
-            "Notion-Version",
-            HeaderValue::from_str(NOTION_API_VERSION)
-                .context("Failed to create Notion version header")?,
-        );
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        Ok(Self {
+            config,
+            client: reqwest::Client::new(),
+            api_url: "https://api.notion.com".to_string(),
+        })
+    }
 
-        let client = reqwest::Client::builder()
-            .default_headers(headers)
-            .build()
-            .context("Failed to create HTTP client")?;
-
-        Ok(NotionClient { client, config })
+    pub fn new_with_base_url(config: Config, base_url: String) -> Result<Self> {
+        Ok(Self {
+            config,
+            client: reqwest::Client::new(),
+            api_url: base_url,
+        })
     }
 
     pub async fn add_task(&self, title: &str) -> Result<Task> {
-        let request_body = json!({
+        let url = format!("{}/v1/pages", self.api_url);
+        let body = serde_json::json!({
             "parent": { "database_id": self.config.database_id },
             "properties": {
                 "Name": {
@@ -94,14 +144,6 @@ impl NotionClient {
                             "text": {
                                 "content": title,
                                 "link": null
-                            },
-                            "annotations": {
-                                "bold": false,
-                                "italic": false,
-                                "strikethrough": false,
-                                "underline": false,
-                                "code": false,
-                                "color": "default"
                             }
                         }
                     ]
@@ -114,127 +156,326 @@ impl NotionClient {
             }
         });
 
-        let response = self
-            .client
-            .post(&format!("{}/pages", NOTION_API_URL))
-            .json(&request_body)
+        let response = self.client
+            .post(&url)
+            .header("Authorization", format!("Bearer {}", self.config.notion_token))
+            .header("Notion-Version", "2022-06-28")
+            .header("Content-Type", "application/json")
+            .json(&body)
             .send()
-            .await
-            .context("Failed to send create task request")?;
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
 
-        if !response.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "Failed to create task. Status: {}, Error: {}",
-                response.status(),
-                response.text().await?
-            ));
-        }
-
-        let response_value = response.json::<serde_json::Value>().await
-            .context("Failed to parse create task response")?;
-
-        Ok(Task {
-            id: response_value["id"].as_str()
-                .context("Missing id in response")?
+        let task = Task {
+            id: response["id"].as_str().unwrap_or_default().to_string(),
+            title: response["properties"]["Name"]["title"][0]["text"]["content"]
+                .as_str()
+                .unwrap_or_default()
                 .to_string(),
-            title: title.to_string(),
             status: TaskStatus::NotStarted,
-            url: response_value["url"].as_str().map(String::from),
-        })
+            url: response["url"].as_str().map(|s| s.to_string()),
+            priority: None,
+            due_date: None,
+            tags: Vec::new(),
+            description: None,
+        };
+
+        Ok(task)
     }
 
     pub async fn list_tasks(&self) -> Result<Vec<Task>> {
-        let response = self
-            .client
-            .post(&format!(
-                "{}/databases/{}/query",
-                NOTION_API_URL, self.config.database_id
-            ))
-            .json(&json!({}))
+        let url = format!("{}/v1/databases/{}/query", self.api_url, self.config.database_id);
+        let response = self.client
+            .post(&url)
+            .header("Authorization", format!("Bearer {}", self.config.notion_token))
+            .header("Notion-Version", "2022-06-28")
+            .header("Content-Type", "application/json")
+            .json(&serde_json::json!({}))
             .send()
-            .await
-            .context("Failed to send list tasks request")?;
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
 
-        if !response.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "Failed to list tasks. Status: {}, Error: {}",
-                response.status(),
-                response.text().await?
-            ));
+        let mut tasks = Vec::new();
+        if let Some(results) = response["results"].as_array() {
+            for result in results {
+                let status = result["properties"]["Status"]["status"]["name"]
+                    .as_str()
+                    .unwrap_or("Not started")
+                    .parse::<TaskStatus>()?;
+
+                let priority = result["properties"]["Priority"]["select"]["name"]
+                    .as_str()
+                    .map(|p| p.parse::<TaskPriority>().ok())
+                    .flatten();
+
+                let due_date = result["properties"]["Due Date"]["date"]["start"]
+                    .as_str()
+                    .map(|s| s.to_string());
+
+                let tags = result["properties"]["Tags"]["multi_select"]
+                    .as_array()
+                    .map(|tags| {
+                        tags.iter()
+                            .filter_map(|tag| tag["name"].as_str())
+                            .map(|s| s.to_string())
+                            .collect()
+                    })
+                    .unwrap_or_default();
+
+                let description = result["properties"]["Description"]["rich_text"]
+                    .as_array()
+                    .and_then(|texts| texts.first())
+                    .and_then(|text| text["text"]["content"].as_str())
+                    .map(|s| s.to_string());
+
+                let task = Task {
+                    id: result["id"].as_str().unwrap_or_default().to_string(),
+                    title: result["properties"]["Name"]["title"][0]["text"]["content"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_string(),
+                    status,
+                    url: result["url"].as_str().map(|s| s.to_string()),
+                    priority,
+                    due_date,
+                    tags,
+                    description,
+                };
+                tasks.push(task);
+            }
         }
 
-        let response_value = response.json::<serde_json::Value>().await
-            .context("Failed to parse list tasks response")?;
-
-        let results = response_value["results"]
-            .as_array()
-            .context("Missing results in response")?
-            .iter()
-            .filter_map(|page| {
-                let id = page["id"].as_str()?;
-                let title = page["properties"]["Name"]["title"][0]["text"]["content"].as_str()?;
-                let status = page["properties"]["Status"]["status"]["name"].as_str()
-                    .unwrap_or("Not started");
-                let url = page["url"].as_str().map(String::from);
-
-                Some(Task {
-                    id: id.to_string(),
-                    title: title.to_string(),
-                    status: TaskStatus::from(status),
-                    url,
-                })
-            })
-            .collect();
-
-        Ok(results)
+        Ok(tasks)
     }
 
-    pub async fn update_task_status(&self, task_id: &str, status: TaskStatus) -> Result<()> {
-        let response = self
-            .client
-            .patch(&format!("{}/pages/{}", NOTION_API_URL, task_id))
-            .json(&json!({
-                "properties": {
-                    "Status": {
-                        "status": {
-                            "name": status.to_string()
-                        }
+    pub async fn update_task_status(&self, task_id: &str, status: TaskStatus) -> Result<Task> {
+        let url = format!("{}/v1/pages/{}", self.api_url, task_id);
+        let body = serde_json::json!({
+            "properties": {
+                "Status": {
+                    "status": {
+                        "name": status.to_string()
                     }
                 }
-            }))
+            }
+        });
+
+        let response = self.client
+            .patch(&url)
+            .header("Authorization", format!("Bearer {}", self.config.notion_token))
+            .header("Notion-Version", "2022-06-28")
+            .header("Content-Type", "application/json")
+            .json(&body)
             .send()
-            .await
-            .context("Failed to send update task request")?;
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
 
-        if !response.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "Failed to update task. Status: {}, Error: {}",
-                response.status(),
-                response.text().await?
-            ));
-        }
+        let task = Task {
+            id: response["id"].as_str().unwrap_or_default().to_string(),
+            title: response["properties"]["Name"]["title"][0]["text"]["content"]
+                .as_str()
+                .unwrap_or_default()
+                .to_string(),
+            status,
+            url: response["url"].as_str().map(|s| s.to_string()),
+            priority: None,
+            due_date: None,
+            tags: Vec::new(),
+            description: None,
+        };
 
-        Ok(())
+        Ok(task)
+    }
+
+    pub async fn set_task_priority(&self, task_id: &str, priority: TaskPriority) -> Result<Task> {
+        let url = format!("{}/v1/pages/{}", self.api_url, task_id);
+        let body = serde_json::json!({
+            "properties": {
+                "Priority": {
+                    "select": {
+                        "name": priority.to_string()
+                    }
+                }
+            }
+        });
+
+        let response = self.client
+            .patch(&url)
+            .header("Authorization", format!("Bearer {}", self.config.notion_token))
+            .header("Notion-Version", "2022-06-28")
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
+
+        let task = Task {
+            id: response["id"].as_str().unwrap_or_default().to_string(),
+            title: response["properties"]["Name"]["title"][0]["text"]["content"]
+                .as_str()
+                .unwrap_or_default()
+                .to_string(),
+            status: TaskStatus::NotStarted,
+            url: response["url"].as_str().map(|s| s.to_string()),
+            priority: Some(priority),
+            due_date: None,
+            tags: Vec::new(),
+            description: None,
+        };
+
+        Ok(task)
+    }
+
+    pub async fn set_task_due_date(&self, task_id: &str, due_date: &str) -> Result<Task> {
+        let url = format!("{}/v1/pages/{}", self.api_url, task_id);
+        let body = serde_json::json!({
+            "properties": {
+                "Due Date": {
+                    "date": {
+                        "start": due_date
+                    }
+                }
+            }
+        });
+
+        let response = self.client
+            .patch(&url)
+            .header("Authorization", format!("Bearer {}", self.config.notion_token))
+            .header("Notion-Version", "2022-06-28")
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
+
+        let task = Task {
+            id: response["id"].as_str().unwrap_or_default().to_string(),
+            title: response["properties"]["Name"]["title"][0]["text"]["content"]
+                .as_str()
+                .unwrap_or_default()
+                .to_string(),
+            status: TaskStatus::NotStarted,
+            url: response["url"].as_str().map(|s| s.to_string()),
+            priority: None,
+            due_date: Some(due_date.to_string()),
+            tags: Vec::new(),
+            description: None,
+        };
+
+        Ok(task)
+    }
+
+    pub async fn set_task_description(&self, task_id: &str, description: &str) -> Result<Task> {
+        let url = format!("{}/v1/pages/{}", self.api_url, task_id);
+        let body = serde_json::json!({
+            "properties": {
+                "Description": {
+                    "rich_text": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": description,
+                                "link": null
+                            }
+                        }
+                    ]
+                }
+            }
+        });
+
+        let response = self.client
+            .patch(&url)
+            .header("Authorization", format!("Bearer {}", self.config.notion_token))
+            .header("Notion-Version", "2022-06-28")
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
+
+        let task = Task {
+            id: response["id"].as_str().unwrap_or_default().to_string(),
+            title: response["properties"]["Name"]["title"][0]["text"]["content"]
+                .as_str()
+                .unwrap_or_default()
+                .to_string(),
+            status: TaskStatus::NotStarted,
+            url: response["url"].as_str().map(|s| s.to_string()),
+            priority: None,
+            due_date: None,
+            tags: Vec::new(),
+            description: Some(description.to_string()),
+        };
+
+        Ok(task)
+    }
+
+    pub async fn add_task_tags(&self, task_id: &str, tags: &str) -> Result<Task> {
+        let url = format!("{}/v1/pages/{}", self.api_url, task_id);
+        let tag_list: Vec<String> = tags.split(',')
+            .map(|s| s.trim().to_string())
+            .collect();
+
+        let tag_objects: Vec<serde_json::Value> = tag_list.iter()
+            .map(|tag| serde_json::json!({"name": tag}))
+            .collect();
+
+        let body = serde_json::json!({
+            "properties": {
+                "Tags": {
+                    "multi_select": tag_objects
+                }
+            }
+        });
+
+        let response = self.client
+            .patch(&url)
+            .header("Authorization", format!("Bearer {}", self.config.notion_token))
+            .header("Notion-Version", "2022-06-28")
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
+
+        let task = Task {
+            id: response["id"].as_str().unwrap_or_default().to_string(),
+            title: response["properties"]["Name"]["title"][0]["text"]["content"]
+                .as_str()
+                .unwrap_or_default()
+                .to_string(),
+            status: TaskStatus::NotStarted,
+            url: response["url"].as_str().map(|s| s.to_string()),
+            priority: None,
+            due_date: None,
+            tags: tag_list,
+            description: None,
+        };
+
+        Ok(task)
     }
 
     pub async fn delete_task(&self, task_id: &str) -> Result<()> {
-        let response = self
-            .client
-            .patch(&format!("{}/pages/{}", NOTION_API_URL, task_id))
-            .json(&json!({
-                "archived": true
-            }))
-            .send()
-            .await
-            .context("Failed to send delete task request")?;
+        let url = format!("{}/v1/pages/{}", self.api_url, task_id);
+        let body = serde_json::json!({
+            "archived": true
+        });
 
-        if !response.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "Failed to delete task. Status: {}, Error: {}",
-                response.status(),
-                response.text().await?
-            ));
-        }
+        self.client
+            .patch(&url)
+            .header("Authorization", format!("Bearer {}", self.config.notion_token))
+            .header("Notion-Version", "2022-06-28")
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await?;
 
         Ok(())
     }
@@ -245,6 +486,25 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_task_creation() {
+        let task = Task {
+            id: "123".to_string(),
+            title: "Test task".to_string(),
+            status: TaskStatus::NotStarted,
+            url: Some("https://notion.so/123".to_string()),
+            priority: None,
+            due_date: None,
+            tags: Vec::new(),
+            description: None,
+        };
+
+        assert_eq!(task.id, "123");
+        assert_eq!(task.title, "Test task");
+        assert_eq!(task.status, TaskStatus::NotStarted);
+        assert_eq!(task.url, Some("https://notion.so/123".to_string()));
+    }
+
+    #[test]
     fn test_task_status_display() {
         assert_eq!(TaskStatus::NotStarted.to_string(), "Not started");
         assert_eq!(TaskStatus::InProgress.to_string(), "In progress");
@@ -252,37 +512,39 @@ mod tests {
     }
 
     #[test]
-    fn test_task_status_from_str() {
-        assert_eq!(TaskStatus::from("Not started"), TaskStatus::NotStarted);
-        assert_eq!(TaskStatus::from("In progress"), TaskStatus::InProgress);
-        assert_eq!(TaskStatus::from("Done"), TaskStatus::Done);
-        assert_eq!(TaskStatus::from("Unknown"), TaskStatus::NotStarted);
+    fn test_task_status_symbol() {
+        assert_eq!(TaskStatus::NotStarted.symbol(), "⭕");
+        assert_eq!(TaskStatus::InProgress.symbol(), "🔄");
+        assert_eq!(TaskStatus::Done.symbol(), "✅");
     }
 
     #[test]
-    fn test_task_status_symbol() {
-        let task = Task {
-            id: "123".to_string(),
-            title: "Test".to_string(),
-            status: TaskStatus::NotStarted,
-            url: None,
-        };
-        assert_eq!(task.status_symbol(), " ");
+    fn test_task_status_from_str() {
+        assert_eq!("not started".parse::<TaskStatus>().unwrap(), TaskStatus::NotStarted);
+        assert_eq!("in progress".parse::<TaskStatus>().unwrap(), TaskStatus::InProgress);
+        assert_eq!("done".parse::<TaskStatus>().unwrap(), TaskStatus::Done);
+        assert!("invalid".parse::<TaskStatus>().is_err());
+    }
 
-        let task = Task {
-            id: "123".to_string(),
-            title: "Test".to_string(),
-            status: TaskStatus::InProgress,
-            url: None,
-        };
-        assert_eq!(task.status_symbol(), "⏳");
+    #[test]
+    fn test_priority_display() {
+        assert_eq!(TaskPriority::High.to_string(), "High");
+        assert_eq!(TaskPriority::Medium.to_string(), "Medium");
+        assert_eq!(TaskPriority::Low.to_string(), "Low");
+    }
 
-        let task = Task {
-            id: "123".to_string(),
-            title: "Test".to_string(),
-            status: TaskStatus::Done,
-            url: None,
-        };
-        assert_eq!(task.status_symbol(), "✓");
+    #[test]
+    fn test_priority_from_str() {
+        assert_eq!("high".parse::<TaskPriority>().unwrap(), TaskPriority::High);
+        assert_eq!("medium".parse::<TaskPriority>().unwrap(), TaskPriority::Medium);
+        assert_eq!("low".parse::<TaskPriority>().unwrap(), TaskPriority::Low);
+        assert!("invalid".parse::<TaskPriority>().is_err());
+    }
+
+    #[test]
+    fn test_task_priority_symbol() {
+        assert_eq!(TaskPriority::High.symbol(), "🔴");
+        assert_eq!(TaskPriority::Medium.symbol(), "🟡");
+        assert_eq!(TaskPriority::Low.symbol(), "🟢");
     }
 } 
