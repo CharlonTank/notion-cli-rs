@@ -1,28 +1,34 @@
 # Notion CLI (Rust)
 
-A powerful command-line interface for managing tasks in Notion, written in Rust.
+A powerful command-line interface for managing tasks in Notion, written in Rust. This CLI tool allows you to manage your Notion tasks directly from your terminal with rich features and intuitive commands.
 
 ## Features
 
 - Add new tasks with rich metadata:
-  - Priority levels (High, Medium, Low)
-  - Due dates
-  - Tags
-  - Descriptions
+  - Priority levels (High, Medium, Low) 🔴 🟡 🟢
+  - Due dates 📅
+  - Tags 🏷️
+  - Descriptions 📝
 - List tasks with advanced filtering and sorting:
-  - Filter by status, priority, or tags
+  - Filter by status (Not started ⭕, In progress 🔄, Done ✅)
+  - Filter by priority
+  - Filter by tags
   - Sort by due date
   - Colored output in terminal
-  - Status indicators (✓ for done, ⏳ for in progress, ○ for not started)
-  - Priority indicators (🔴 high, 🟡 medium, 🟢 low)
 - Update task properties:
-  - Mark tasks as "In Progress"
-  - Mark tasks as completed/uncompleted
-  - Set priority levels
-  - Set due dates
-  - Add tags
-  - Set descriptions
+  - Change task status
+  - Set/update priority levels
+  - Set/update due dates
+  - Add/update tags
+  - Set/update descriptions
 - Delete tasks
+
+## Prerequisites
+
+- Rust and Cargo installed on your system ([Install Rust](https://www.rust-lang.org/tools/install))
+- A Notion account
+- A Notion integration token
+- A properly configured Notion database
 
 ## Installation
 
@@ -37,85 +43,174 @@ cd notion-cli-rs
 cargo build --release
 ```
 
-## Configuration
+3. (Optional) Add the binary to your PATH:
+```bash
+# On Unix-like systems (Linux/macOS)
+cp target/release/notion-cli-rs ~/.local/bin/
+# Or
+sudo cp target/release/notion-cli-rs /usr/local/bin/
+```
 
-1. Create a Notion integration:
-   - Go to https://www.notion.so/my-integrations
+## Notion Setup (Detailed Guide)
+
+1. Create a Notion Integration:
+   - Visit [Notion Integrations](https://www.notion.so/my-integrations)
    - Click "New integration"
-   - Give it a name (e.g., "Task Manager CLI")
-   - Copy the "Internal Integration Token"
+   - Name: Enter a name (e.g., "Task Manager CLI")
+   - Capabilities needed:
+     - ✅ Read content
+     - ✅ Update content
+     - ✅ Insert content
+     - ✅ Delete content
+   - Click "Submit"
+   - Copy the "Internal Integration Token" (starts with `secret_`)
 
-2. Create a Notion database with the following properties:
-   - "Name" column (title type)
-   - "Status" column (status type with options: "Not started", "In progress", "Done")
-   - "Priority" column (select type with options: "High", "Medium", "Low")
-   - "Due Date" column (date type)
-   - "Tags" column (multi-select type)
-   - "Description" column (text type)
+2. Create a Notion Database:
+   - Open Notion
+   - Click "+ New page" in the sidebar
+   - Click "Table" at the top
+   - Add the following properties (exact names are important):
+     - "Name" (already exists, title type)
+     - Click "+ Add a property" for each:
+       - "Status" (Select type)
+         - Options: "Not started", "In progress", "Done"
+         - Colors: Gray, Blue, Green (recommended)
+       - "Priority" (Select type)
+         - Options: "High", "Medium", "Low"
+         - Colors: Red, Yellow, Green (recommended)
+       - "Due Date" (Date type)
+       - "Tags" (Multi-select type)
+         - Add some initial tags (e.g., "work", "personal", "urgent")
+       - "Description" (Text type)
 
-3. Share the database with your integration:
-   - Open your database in Notion
-   - Click "..." in the top right
+3. Share Database with Integration:
+   - In your database view, click "•••" (three dots) in the top-right corner
    - Click "Add connections"
-   - Select your integration
+   - Find and select your integration name
+   - Click "Confirm"
 
-4. Copy the database ID from the URL:
+4. Get Database ID:
    - Open your database in Notion
-   - The URL will look like: `https://www.notion.so/workspace/DATABASE_ID?v=...`
-   - Copy the DATABASE_ID part
+   - Look at the URL: `https://www.notion.so/workspace/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX?v=...`
+   - Copy the 32-character ID (marked as X's above)
 
-5. Create a `.env` file:
+5. Configure Environment:
 ```bash
+# Copy the example environment file
 cp .env.example .env
-```
-Then add your credentials:
-```
-NOTION_TOKEN=your_integration_token
-NOTION_DATABASE_ID=your_database_id
-LOCAL_TIMEZONE='Your/Timezone'
+
+# Edit the .env file with your details
+NOTION_TOKEN=secret_your_integration_token_here
+NOTION_DATABASE_ID=your_database_id_here
+LOCAL_TIMEZONE=America/New_York  # Use your timezone from the TZ database
 ```
 
-## Usage
+## Usage Guide
+
+### Basic Task Management
 
 ```bash
-# Add a new task (basic)
-cargo run -- add "Your task title"
+# Add a simple task
+cargo run -- add "Buy groceries"
 
-# Add a task with metadata
-cargo run -- add "Important task" --priority high --due "2024-01-20" --tags "work,urgent" --description "This needs to be done ASAP"
+# Add a detailed task
+cargo run -- add "Quarterly report" \
+  --priority high \
+  --due "2024-01-20" \
+  --tags "work,reports,q4" \
+  --description "Prepare Q4 2023 financial report for stakeholders"
 
 # List all tasks
 cargo run -- list
 
 # List tasks with filters
-cargo run -- list --status in-progress --priority high --tag work --sort-by-due
+cargo run -- list --status "in progress" --priority high
 
-# Mark a task as in progress
-cargo run -- progress <task-id>
-
-# Mark a task as completed
-cargo run -- check <task-id>
-
-# Mark a task as not started
-cargo run -- uncheck <task-id>
-
-# Set task priority
-cargo run -- set-priority <task-id> high
-
-# Set due date
-cargo run -- set-due <task-id> "2024-01-20"
-
-# Add tags
-cargo run -- add-tags <task-id> "work,urgent,important"
-
-# Set description
-cargo run -- set-description <task-id> "Detailed task description"
+# Update task status
+cargo run -- status <task-id> "in progress"
+cargo run -- status <task-id> "done"
 
 # Delete a task
 cargo run -- delete <task-id>
+```
 
-# Show help
+### Advanced Task Management
+
+```bash
+# Set/update task priority
+cargo run -- priority <task-id> high
+
+# Set/update due date
+cargo run -- due-date <task-id> "2024-01-20"
+
+# Add/update tags
+cargo run -- tags <task-id> "urgent,priority,q4"
+
+# Set/update description
+cargo run -- description <task-id> "Detailed task description here"
+```
+
+### Filtering and Sorting
+
+```bash
+# List high priority tasks
+cargo run -- list --priority high
+
+# List in-progress tasks
+cargo run -- list --status "in progress"
+
+# List tasks with specific tag
+cargo run -- list --tag work
+
+# List tasks sorted by due date
+cargo run -- list --sort-by-due
+```
+
+## Task Properties
+
+- **Status Options:**
+  - "Not started" (⭕)
+  - "In progress" (🔄)
+  - "Done" (✅)
+
+- **Priority Levels:**
+  - "High" (🔴)
+  - "Medium" (🟡)
+  - "Low" (🟢)
+
+## Troubleshooting
+
+### Common Issues:
+
+1. **Authentication Error:**
+   - Verify your `NOTION_TOKEN` in `.env`
+   - Ensure the token starts with `secret_`
+   - Check if the integration has access to the database
+
+2. **Database Not Found:**
+   - Verify your `NOTION_DATABASE_ID` in `.env`
+   - Ensure the integration is connected to the database
+   - Check if the database structure matches the requirements
+
+3. **Command Not Found:**
+   - If you haven't added the binary to PATH, use `cargo run -- <command>` instead of direct binary calls
+   - Ensure you're in the project directory when using `cargo run`
+
+4. **Invalid Property Values:**
+   - Status must be exactly: "Not started", "In progress", or "Done"
+   - Priority must be exactly: "High", "Medium", or "Low"
+   - Due dates must be in YYYY-MM-DD format
+
+### Getting Help
+
+```bash
+# Show general help
 cargo run -- --help
+
+# Show help for specific command
+cargo run -- add --help
+cargo run -- list --help
+# etc.
 ```
 
 ## Development
@@ -123,7 +218,14 @@ cargo run -- --help
 ### Running Tests
 
 ```bash
+# Run all tests
 cargo test
+
+# Run tests with output
+cargo test -- --nocapture
+
+# Run specific test
+cargo test test_name -- --nocapture
 ```
 
 ### Building for Release
