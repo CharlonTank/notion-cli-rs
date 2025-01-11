@@ -2,8 +2,15 @@
 name = "notion-cli-rs"
 version = "0.1.0"
 edition = "2021"
-authors = ["Your Name <charlondev@gmail.com>"]
-description = "A CLI tool for managing Notion tasks"
+authors = ["Charlon Franck <charlondev@gmail.com>"]
+description = "A powerful command-line interface for managing Notion tasks"
+license = "MIT"
+repository = "https://github.com/CharlonTank/notion-cli-rs"
+documentation = "https://github.com/CharlonTank/notion-cli-rs#readme"
+homepage = "https://github.com/CharlonTank/notion-cli-rs"
+keywords = ["notion", "cli", "task-management", "productivity", "todo"]
+categories = ["command-line-utilities", "api-bindings"]
+readme = "README.md"
 
 [lib]
 name = "notion_cli_rs"

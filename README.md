@@ -6,11 +6,12 @@
 [![Notion](https://img.shields.io/badge/Notion-%23000000.svg?style=for-the-badge&logo=notion&logoColor=white)](https://www.notion.so/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
-[![Crates.io](https://img.shields.io/crates/v/notion-cli-rs?style=for-the-badge)](https://crates.io/crates/notion-cli-rs)
 [![Minimum Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg?style=for-the-badge)](https://www.rust-lang.org/)
 
 A powerful command-line interface for managing Notion tasks, written in Rust. 
 Streamline your task management workflow directly from your terminal.
+
+> **Note**: This package is currently only available through GitHub installation. Crates.io publication is coming soon!
 
 [Installation](#installation) •
 [Features](#features) •
